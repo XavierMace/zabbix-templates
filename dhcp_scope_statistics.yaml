@@ -1,0 +1,114 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: 95a9c3018ac34c4b9a1077dd2d7a0558
+      template: 'SANITIZED - DHCP Scope Statistics'
+      name: 'SANITIZED - DHCP Scope Statistics'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 3f4fa5cd3825428fbc316a1403e4ff60
+          name: 'Get DHCP Scope Data'
+          key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-DhcpServerv4ScopeStatistics -ComputerName {$DOMAIN} | ConvertTo-Json"]'
+          history: '0'
+          trends: '0'
+          value_type: TEXT
+      discovery_rules:
+        - uuid: 5fbe7999cc664d7fb118884ee4bd6655
+          name: 'Discovery of DHCP Scopes'
+          type: DEPENDENT
+          key: dhcp.scopes.discovery
+          delay: '0'
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: a545a569bb9f47e18be1bc4f804acf38
+              name: '{#SCOPEID} Free IP''s'
+              type: DEPENDENT
+              key: 'dhcp.scopes.freeip[{#SCOPEID}]'
+              delay: '0'
+              history: 90d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.ScopeId.IPAddressToString== "{#SCOPEID}")].Free'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-DhcpServerv4ScopeStatistics -ComputerName {$DOMAIN} | ConvertTo-Json"]'
+            - uuid: 39853c5f9b764f2e8e6685f60966c334
+              name: '{#SCOPEID} Percent IP''s in use'
+              type: DEPENDENT
+              key: 'dhcp.scopes.percentusedip[{#SCOPEID}]'
+              delay: '0'
+              history: 90d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.ScopeId.IPAddressToString== "{#SCOPEID}")].PercentageInUse'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+                - type: JAVASCRIPT
+                  parameters:
+                    - 'return parseInt(value)'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-DhcpServerv4ScopeStatistics -ComputerName {$DOMAIN} | ConvertTo-Json"]'
+              trigger_prototypes:
+                - uuid: be5660f7427c48e79ccacd7735a98e8c
+                  expression: 'last(/SANITIZED - DHCP Scope Statistics/dhcp.scopes.percentusedip[{#SCOPEID}],#3)>= {$USAGE_CRIT}'
+                  name: 'Critical DHCP Scope usage for {#SCOPEID}'
+                  priority: INFO
+                - uuid: cec07a4f5cb747808b066d91d4f70e95
+                  expression: 'last(/SANITIZED - DHCP Scope Statistics/dhcp.scopes.percentusedip[{#SCOPEID}],#3)> {$USAGE_WARN} and last(/SANITIZED - DHCP Scope Statistics/dhcp.scopes.percentusedip[{#SCOPEID}],#3)< {$USAGE_CRIT}'
+                  name: 'High DHCP Scope usage for {#SCOPEID}'
+                  priority: INFO
+            - uuid: 98e8b4db64fe48b199b4de348b4378b4
+              name: '{#SCOPEID} In Use IP''s'
+              type: DEPENDENT
+              key: 'dhcp.scopes.usedip[{#SCOPEID}]'
+              delay: '0'
+              history: 90d
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.ScopeId.IPAddressToString== "{#SCOPEID}")].InUse'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-DhcpServerv4ScopeStatistics -ComputerName {$DOMAIN} | ConvertTo-Json"]'
+          master_item:
+            key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-DhcpServerv4ScopeStatistics -ComputerName {$DOMAIN} | ConvertTo-Json"]'
+          lld_macro_paths:
+            - lld_macro: '{#SCOPEFREE}'
+              path: $.Free
+            - lld_macro: '{#SCOPEID}'
+              path: $.ScopeId.IPAddressToString
+            - lld_macro: '{#SCOPEINUSE}'
+              path: $.InUse
+            - lld_macro: '{#SCOPEPERCENTFREE}'
+              path: $.PercentageInUse
+      macros:
+        - macro: '{$DOMAIN}'
+          value: ad.example.com
+          description: 'Change this to the domain that you''re wanting to check scopes for'
+        - macro: '{$USAGE_CRIT}'
+          value: '100'
+          description: 'Threshold for utilization critical'
+        - macro: '{$USAGE_WARN}'
+          value: '80'
+          description: 'Threshold for utilization warning'
