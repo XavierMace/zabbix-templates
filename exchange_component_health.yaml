@@ -1,0 +1,96 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: b81b77f2e7e1428c8c9ec49af5d3a243
+      template: 'SANITIZED - Microsoft Exchange Component Health'
+      name: 'SANITIZED - Microsoft Exchange Component Health'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 9a7cd1b6da754da4887f5c1df943c603
+          name: 'Get Bulk Data'
+          key: 'system.run[[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; Get-ServerComponentState {$SMTPSERVER} | ConvertTo-JSON"]]'
+          delay: 5m
+          history: 90d
+          trends: '0'
+          value_type: TEXT
+      discovery_rules:
+        - uuid: 6548070f6c1240f8859ddbb219c98c2e
+          name: 'Discovery of Exchange Components'
+          type: DEPENDENT
+          key: discovery.exchange.components
+          delay: '0'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#COMPONENT}'
+                value: '{$COMPONENT_MATCHES}'
+                formulaid: A
+              - macro: '{#COMPONENT}'
+                value: '{$COMPONENT_NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: edf30196f5554bb9b55152fd1137b6a0
+              name: 'State of component {#COMPONENT}'
+              type: DEPENDENT
+              key: 'exchange.component.state[{#COMPONENT}]'
+              delay: '0'
+              history: 90d
+              valuemap:
+                name: 'Component State'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.Component== "{#COMPONENT}")].State'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+                - type: JAVASCRIPT
+                  parameters:
+                    - 'return (Number(value))'
+              master_item:
+                key: 'system.run[[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; Get-ServerComponentState {$SMTPSERVER} | ConvertTo-JSON"]]'
+              trigger_prototypes:
+                - uuid: 80c9963b8e7d447da2caeed7248eaf3e
+                  expression: 'max(/SANITIZED - Microsoft Exchange Component Health/exchange.component.state[{#COMPONENT}],10m)=0'
+                  name: 'Exchange Component {#COMPONENT} is down'
+                  priority: INFO
+                  tags:
+                    - tag: Application
+                      value: 'Microsoft Exchange'
+          master_item:
+            key: 'system.run[[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Add-PSSnapin Microsoft.Exchange.Management.PowerShell.SnapIn; Get-ServerComponentState {$SMTPSERVER} | ConvertTo-JSON"]]'
+          lld_macro_paths:
+            - lld_macro: '{#COMPONENT}'
+              path: $.Component
+            - lld_macro: '{#STATE}'
+              path: $.State
+      tags:
+        - tag: Application
+          value: 'Microsoft Exchange'
+      macros:
+        - macro: '{$COMPONENT_MATCHES}'
+          value: '.*'
+          description: 'Only monitoring these components'
+        - macro: '{$COMPONENT_NOT_MATCHES}'
+          value: ProvisioningRps|ForwardSyncDaemon
+          description: 'Exclude monitoring these components'
+        - macro: '{$SMTPSERVER}'
+          description: 'SMTP Server to query'
+      valuemaps:
+        - uuid: 9b2e6c3fddc24eeda3e655edad9487a4
+          name: 'Component State'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up

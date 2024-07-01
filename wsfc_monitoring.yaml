@@ -1,0 +1,158 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    - uuid: 504e117eb9e344d7ad6e94eb74a62e70
+      template: 'SANITIZED - WSFC Monitoring'
+      name: 'SANITIZED - WSFC Monitoring'
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 7d688329579743e29575aec7c821da13
+          name: 'Get Cluster Group Data'
+          key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterGroup | ConvertTo-Json"]'
+          history: 90d
+          trends: '0'
+          value_type: TEXT
+        - uuid: d98fcd13757e492d8071b4b73af083c8
+          name: 'Get Cluster Node Data'
+          key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterNode | ConvertTo-Json"]'
+          history: 90d
+          trends: '0'
+          value_type: TEXT
+        - uuid: edcd0ad142454cf6a5974e1eb786c8cb
+          name: 'Cluster Resiliency'
+          type: CALCULATED
+          key: wsfc.health.resiliency
+          history: 90d
+          params: 'sum(last_foreach(//wsfc.health.state[*]))'
+          triggers:
+            - uuid: 55d3157e228a4cf5aa94a881c2940904
+              expression: 'last(/SANITIZED - WSFC Monitoring/wsfc.health.resiliency,#3)>={$CLUSTERRESILIENCY}'
+              name: 'Offline Cluster Nodes exceeds limits'
+              priority: INFO
+      discovery_rules:
+        - uuid: 7a5631cd16584f46b65390af4dafd401
+          name: 'Discovery of Cluster Groups'
+          type: DEPENDENT
+          key: discovery.wsfc.groups
+          delay: '0'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#GROUPNAME}'
+                value: '{$WSFC.HEALTH.CLUSTERNAME.MATCHES}'
+                formulaid: A
+              - macro: '{#GROUPNAME}'
+                value: '{$WSFC.HEALTH.CLUSTERNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: f79c31a178d54196a576c65708d98b01
+              name: 'Owner Node of {#GROUPNAME}'
+              type: DEPENDENT
+              key: 'wsfc.health.groupowner[{#GROUPNAME}]'
+              delay: '0'
+              history: 90d
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.Name== "{#GROUPNAME}")].OwnerNode.NodeName'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterGroup | ConvertTo-Json"]'
+            - uuid: 883b5d6d02a6401caae4016e3edea806
+              name: 'State of Cluster Group {#GROUPNAME}'
+              type: DEPENDENT
+              key: 'wsfc.health.groupstate[{#GROUPNAME}]'
+              delay: '0'
+              history: 90d
+              valuemap:
+                name: WSFC-State
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.Name== "{#GROUPNAME}")].State'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterGroup | ConvertTo-Json"]'
+          master_item:
+            key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterGroup | ConvertTo-Json"]'
+          lld_macro_paths:
+            - lld_macro: '{#GROUPNAME}'
+              path: $.Name
+            - lld_macro: '{#OWNERCLUSTER}'
+              path: $.OwnerNode.Cluster
+            - lld_macro: '{#OWNERNAME}'
+              path: $.OwnerNode.NodeName
+        - uuid: 872734e4758d4e20b9408ae1d14ea544
+          name: 'Discovery of Cluster Nodes'
+          type: DEPENDENT
+          key: discovery.wsfc.status
+          delay: '0'
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 20e4a0184de84703862d835d1de35001
+              name: 'State of {#NODENAME} in cluster {#CLUSTERNAME}'
+              type: DEPENDENT
+              key: 'wsfc.health.state[{#NODENAME}]'
+              delay: '0'
+              history: 90d
+              valuemap:
+                name: WSFC-State
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.NodeName== "{#NODENAME}")].State'
+                - type: LTRIM
+                  parameters:
+                    - '['
+                - type: RTRIM
+                  parameters:
+                    - ']'
+              master_item:
+                key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterNode | ConvertTo-Json"]'
+          master_item:
+            key: 'system.run[powershell.exe -NoProfile -NoLogo -ExecutionPolicy Bypass -Command "Get-ClusterNode | ConvertTo-Json"]'
+          lld_macro_paths:
+            - lld_macro: '{#CLUSTERNAME}'
+              path: $.Cluster.Name
+            - lld_macro: '{#NODEID}'
+              path: $.ID
+            - lld_macro: '{#NODENAME}'
+              path: $.NodeName
+      macros:
+        - macro: '{$CLUSTERRESILIENCY}'
+          value: '2'
+          description: 'Amount of down nodes to trigger cluster alarm'
+        - macro: '{$WSFC.HEALTH.CLUSTERNAME.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in Windows Server Failover Cluster discovery. Can be overridden on the host or linked template level'
+        - macro: '{$WSFC.HEALTH.CLUSTERNAME.NOT_MATCHES}'
+          value: CHANGE_THIS
+          description: 'This macro is used in Windows Server Failover Cluster discovery. Can be overridden on the host or linked template level'
+      valuemaps:
+        - uuid: d5502a1baec149239f332b05cc3c5b85
+          name: WSFC-State
+          mappings:
+            - value: '0'
+              newvalue: Online
+            - value: '1'
+              newvalue: Offline

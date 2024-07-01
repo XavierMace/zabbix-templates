@@ -1,0 +1,898 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 50e0c9768744482f99620f1983dac696
+      template: 'SANITIZED - Dell Storage Center by SNMP'
+      name: 'SANITIZED - Dell Storage Center by SNMP'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 7fecf40b272c4955be6b8de509fb02a1
+          name: 'Device software version'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.16139.2.7.0
+          key: productIDBuildNumber
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: OS
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: cd12d1152fc94688ad8fdcf3940a571b
+          name: 'Device model name'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.16139.2.1.0
+          key: productIDDisplayName
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: TYPE
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: 799c557f4b7b4132838bfa7147beb619
+          name: 'Device global status'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.16139.2.6.0
+          key: productIDGlobalStatus
+          delay: '300'
+          history: 7d
+          tags:
+            - tag: Application
+              value: Information(s)
+          triggers:
+            - uuid: 4d18ecd1c62e4b91abed3314dfb61f91
+              expression: 'last(/SANITIZED - Dell Storage Center by SNMP/productIDGlobalStatus)<3'
+              name: 'Global status of {HOST.NAME} is abnormal'
+              priority: AVERAGE
+            - uuid: e2e4496e7b584bfa86de645fc756b64c
+              expression: 'last(/SANITIZED - Dell Storage Center by SNMP/productIDGlobalStatus)=5'
+              name: 'Global status of {HOST.NAME} is critical'
+              priority: HIGH
+            - uuid: 4691fde51df740329b4b0dd927faa291
+              expression: 'last(/SANITIZED - Dell Storage Center by SNMP/productIDGlobalStatus)=4'
+              name: 'Global status of {HOST.NAME} is noncritical'
+              priority: INFO
+            - uuid: fb91d686084349e8afd65598251822a3
+              expression: 'last(/SANITIZED - Dell Storage Center by SNMP/productIDGlobalStatus)=6'
+              name: 'Global status of {HOST.NAME} is nonrecoverable'
+              priority: DISASTER
+        - uuid: c4fd95c264c34665bd98aa3810fc55a0
+          name: 'Device management URL'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.16139.2.8.0
+          key: productIDURL
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: URL_A
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: 16c9edac1eac4ec1a168f13d028e0d93
+          name: 'Device serial number'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.16139.2.10.0
+          key: scIndex
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: SERIALNO_A
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: 49faa1c6f8874b6ea9cd63935d17f57a
+          name: Contact
+          type: SNMP_AGENT
+          snmp_oid: 'SNMPv2-MIB::sysContact.0'
+          key: sysContact
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: CONTACT
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: b1b039af152349cfb497574dbf36d91f
+          name: 'Device location'
+          type: SNMP_AGENT
+          snmp_oid: 'SNMPv2-MIB::sysLocation.0'
+          key: sysLocation
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: LOCATION
+          tags:
+            - tag: Application
+              value: Information(s)
+        - uuid: c51fae6b35dc4d30a5a418be1af375f7
+          name: 'Device name'
+          type: SNMP_AGENT
+          snmp_oid: 'SNMPv2-MIB::sysName.0'
+          key: sysName
+          delay: '3600'
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          inventory_link: NAME
+          tags:
+            - tag: Application
+              value: Information(s)
+          triggers:
+            - uuid: 0441d07a178d4d3bb5624ba3acff59d3
+              expression: '(last(/SANITIZED - Dell Storage Center by SNMP/sysName,#1)<>last(/SANITIZED - Dell Storage Center by SNMP/sysName,#2))>0'
+              name: '{HOST.NAME} name has changed'
+              priority: INFO
+        - uuid: ff25e97452f54d459f2fde4808ba2adc
+          name: Uptime
+          type: SNMP_AGENT
+          snmp_oid: 'SNMPv2-MIB::sysUpTime.0'
+          key: sysUpTime
+          delay: '300'
+          history: 7d
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: Application
+              value: Information(s)
+          triggers:
+            - uuid: 69dbf87a7e2b42b9a1ef7e7786acd75e
+              expression: 'change(/SANITIZED - Dell Storage Center by SNMP/sysUpTime)<0'
+              name: '{HOST.NAME} has just been restarted'
+              priority: HIGH
+      discovery_rules:
+        - uuid: 3c4f61d8c4db4c98915aec910724f2c6
+          name: 'Cache Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CACHESTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.3,{#CACHENAME},1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.4,{#CACHEBATTERYSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.5,{#CACHEBATTERYEXPIRY},1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.6]'
+          key: sc.cache.discovery
+          delay: 1h
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: e0c19a2d410c4727aa43727fa9f780d5
+              name: 'Recommended Battery Replacement date of cache {#CACHENAME}'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.6.{#SNMPINDEX}'
+              key: 'sc.cache.batteryreplacementdate[{#SNMPINDEX}]'
+              delay: 5m
+              history: 90d
+              trends: '0'
+              value_type: CHAR
+            - uuid: 71d9609cb52f432da3037f83dfc10236
+              name: 'Battery Status of cache {#CACHENAME}'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.5.{#SNMPINDEX}'
+              key: 'sc.cache.batterystatus[{#SNMPINDEX}]'
+              delay: 5m
+              history: 90d
+              valuemap:
+                name: 'Cache Battery Status'
+              trigger_prototypes:
+                - uuid: 2bd7ea1053594e8f99a6d00eccdd3e26
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.cache.batterystatus[{#SNMPINDEX}])=3'
+                  name: '{#CACHENAME} battery is expired'
+                  priority: WARNING
+                - uuid: 2cdbe02ad2e04efca255fb0e63fb92e5
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.cache.batterystatus[{#SNMPINDEX}])=2'
+                  name: '{#CACHENAME} battery is pending expiration'
+                  priority: WARNING
+                - uuid: 2966cffff6b64b97850fb7d008137a76
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.cache.batterystatus[{#SNMPINDEX}])=0'
+                  name: '{#CACHENAME} has no battery'
+                  priority: INFO
+            - uuid: 3556057027a6448abb889fc4e4a029c5
+              name: 'Status of cache {#CACHENAME}'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.28.1.3.{#SNMPINDEX}'
+              key: 'sc.cache.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 90d
+              valuemap:
+                name: 'Item Status'
+        - uuid: 5b8e220498a04b629243b3be38cbb76f
+          name: 'Controller Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CTRLSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.3,{#CTRLLEADER},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.12,{#CTRLSERVICETAG},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.8,{#CTRLNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.4,{#CTRLNUMBER},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.2,{#CTRLMODEL},1.3.6.1.4.1.674.11000.2000.500.1.2.13.1.7]'
+          key: sc.controller.discovery
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: cd46b26b8b1248d49b0c98946b6eb227
+              name: 'Controller {#CTRLNAME} ID'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.16139.2.13.1.2.{#SNMPINDEX}'
+              key: 'sc.controller.id[{#SNMPINDEX}]'
+              delay: 1h
+              history: 7d
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1d
+              tags:
+                - tag: Application
+                  value: Controller(s)
+            - uuid: 994f6c2887cc470dab1aea3d216a98c6
+              name: 'Controller {#CTRLNAME} IP Address'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.16139.2.13.1.5.{#SNMPINDEX}'
+              key: 'sc.controller.ipaddress[{#SNMPINDEX}]'
+              delay: 1h
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1d
+              tags:
+                - tag: Application
+                  value: Controller(s)
+            - uuid: 68ab4975cc6343658d2b83d066ca1151
+              name: 'Controller {#CTRLNAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.16139.2.13.1.3.{#SNMPINDEX}'
+              key: 'sc.controller.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Controller(s)
+              trigger_prototypes:
+                - uuid: 0512fbf0f78545dc9c2bd94fc647f349
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controller.status[{#SNMPINDEX}])=3'
+                  name: 'Controller {#CTRLNAME} is degraded on {HOST.NAME}'
+                  priority: AVERAGE
+                - uuid: fcb8867edd6341c08ae293c888732afb
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controller.status[{#SNMPINDEX}])=2'
+                  name: 'Controller {#CTRLNAME} is down on {HOST.NAME}'
+                  priority: DISASTER
+        - uuid: 5762a709bdab48c3bf740da84648052b
+          name: 'Controller Fan Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CTRLFANSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.3,{#CTRLFANNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.4,{#CTRLFANCURRPM},1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.5,{#CTRLFANNORMMINRPM},1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.6,{#CURFANNORMMAXRPM},1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.7]'
+          key: sc.controllerfan.discovery
+          delay: 1h
+          lifetime: 1d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: d40a0f05c4484c72aed1cf0d85cab763
+              name: 'Controller Fan {#CTRLFANNAME} current RPM'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.5.{#SNMPINDEX}'
+              key: 'sc.controllerfan.currentrpm[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              tags:
+                - tag: Application
+                  value: Fan(s)
+            - uuid: 7bdd568e7fd143d0a8e4b40384ed3cee
+              name: 'Controller Fan {#CTRLFANNAME} normal MAX RPM'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.6.{#SNMPINDEX}'
+              key: 'sc.controllerfan.normmaxrpm[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              tags:
+                - tag: Application
+                  value: Fan(s)
+            - uuid: ca185196909a4cb3873c744f2157f411
+              name: 'Controller Fan {#CTRLFANNAME} normal MIN RPM'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.7.{#SNMPINDEX}'
+              key: 'sc.controllerfan.normminrpm[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              tags:
+                - tag: Application
+                  value: Fan(s)
+            - uuid: 67b449eae9dc44fc803f7115b81bc096
+              name: 'Controller Fan {#CTRLFANNAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.16.1.3.{#SNMPINDEX}'
+              key: 'sc.controllerfan.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Fan(s)
+              trigger_prototypes:
+                - uuid: 9ca05a61ff0644e9864664f1985f8e97
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllerfan.status[{#SNMPINDEX}])=3'
+                  name: '{#CTRLFANNAME} is Degraded'
+                  priority: WARNING
+                - uuid: 59ff42b2db664ad19903586038767f7f
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllerfan.status[{#SNMPINDEX}])=2'
+                  name: '{#CTRLFANNAME} is Failed'
+                  priority: AVERAGE
+        - uuid: 898b5a733d9c4b46a28c8435d9d4f345
+          name: 'Controller Power Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CTRLPOWERSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.17.1.3,{#CTRLPOWERNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.17.1.4]'
+          key: sc.controllerpower.discovery
+          delay: 1h
+          lifetime: 1d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 630f731adf994cb8a0138cbc748bc71d
+              name: 'Controller Power {#CTRLPOWERNAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.17.1.3.{#SNMPINDEX}'
+              key: 'sc.controllerpower.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Power(s)
+              trigger_prototypes:
+                - uuid: 36da9462084e429d9d57ff24092e64ac
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllerpower.status[{#SNMPINDEX}])=3'
+                  name: '{#CTRLPOWERNAME} is Degraded'
+                  priority: WARNING
+                - uuid: 5ad501a8fc314220b919bfedba3a115a
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllerpower.status[{#SNMPINDEX}])=2'
+                  name: '{#CTRLPOWERNAME} is Failed'
+                  priority: AVERAGE
+        - uuid: cbe7ef650d414176ad8ee1ecc4a48d60
+          name: 'Controller Temperature Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CTRLTEMPSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.3,{#CTRLTEMPNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.4,{#CTRLTEMPCURRENT},1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.5,{#CTRLTEMPNORMMIN},1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.6,{#CTRLTEMPNORMMAX},1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.7]'
+          key: sc.controllertemp.discovery
+          delay: 1h
+          lifetime: 1d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 9abc462440134bb1b834068bc15bdab5
+              name: 'Controller Temperature {#CTRLTEMPNAME} current'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.5.{#SNMPINDEX}'
+              key: 'sc.controllertemp.currenttemp[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              units: C
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+            - uuid: 0033b6c9ab064fc18944b4ea08413308
+              name: 'Controller Temperature {#CTRLTEMPNAME} normal MAX'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.6.{#SNMPINDEX}'
+              key: 'sc.controllertemp.normmaxtemp[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              units: C
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+            - uuid: fabaf817420d4add9bb693a574a0be97
+              name: 'Controller Temperature {#CTRLTEMPNAME} normal MIN'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.7.{#SNMPINDEX}'
+              key: 'sc.controllertemp.normmintemp[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              units: C
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+            - uuid: cd3c24301de2433688ebc8505f4712fc
+              name: 'Controller Temperature {#CTRLTEMPNAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.19.1.3.{#SNMPINDEX}'
+              key: 'sc.controllertemp.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+              trigger_prototypes:
+                - uuid: 68475eb104874c318f12ad9da426241e
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllertemp.status[{#SNMPINDEX}])=2'
+                  name: '{#CTRLTEMPNAME} temperature is critical'
+                  priority: AVERAGE
+                - uuid: b4a270bcb4c54ddd8c9dc94a8e915064
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.controllertemp.status[{#SNMPINDEX}])=3'
+                  name: '{#CTRLTEMPNAME} temperature is warning'
+                  priority: WARNING
+        - uuid: 7e5fd9d727a5431b9a0d87a5a1b5284a
+          name: 'Enclosure Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ENCSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.3,{#ENCNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.4,{#ENCTYPE},1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.6,{#ENCMODEL},1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.7,{#ENCSERVICETAG},1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.9]'
+          key: sc.discovery.enclosure
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 2cfa24ee90bf44839c3817d22611dbeb
+              name: 'Enclosure {#ENCNAME} Model'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.7.{#SNMPINDEX}'
+              key: 'sc.enclosure.model[{#SNMPINDEX}]'
+              delay: 1d
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Enclosure(s)
+            - uuid: 06eef89c70f74222844d951c78486765
+              name: 'Enclosure {#ENCNAME} Service Tag'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.9.{#SNMPINDEX}'
+              key: 'sc.enclosure.servicetag[{#SNMPINDEX}]'
+              delay: 1d
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Enclosure(s)
+            - uuid: d1443a75a5d2474fbc29844530846491
+              name: 'Enclosure {#ENCNAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.3.{#SNMPINDEX}'
+              key: 'sc.enclosure.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Enclosure(s)
+              trigger_prototypes:
+                - uuid: 045e3791ec4142a38ca3b6df681cdcb8
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosure.status[{#SNMPINDEX}])=3'
+                  name: '{#ENCNAME} is degraded on {HOST.NAME}'
+                  priority: AVERAGE
+                - uuid: 0dfd706b0be8451ebb2eba82e0ca5312
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosure.status[{#SNMPINDEX}])=2'
+                  name: '{#ENCNAME} is failed on {HOST.NAME}'
+                  priority: HIGH
+            - uuid: 340795d6fee54a6f991afee94c8d30b4
+              name: 'Enclosure {#ENCNAME} Type'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.15.1.6.{#SNMPINDEX}'
+              key: 'sc.enclosure.type[{#SNMPINDEX}]'
+              delay: 1d
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Enclosure(s)
+        - uuid: 1998a2684a8145928c7801e83f793cc6
+          name: 'Disk Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#DISKSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.3,{#DISKPOSITION},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.4,{#DISKHEALTHY},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.5,{#DISKSIZE},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.9,{#DISKSTATUSMSG},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.6,{#DISKPORTTYPE},1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.10,{#DISKMODEL},1.3.6.1.4.1.16139.2.45.1.6]'
+          key: sc.disk.discovery
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: b429f7aa775a4429bfb23828a0750aca
+              name: 'Disk {#DISKPOSITION} Health'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.16139.2.14.1.5.{#SNMPINDEX}'
+              key: 'sc.disk.health[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Disk Health'
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: ea2015f0a46d434aaac56e9fa41e4d18
+              name: 'Disk {#DISKPOSITION} ID'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.16139.2.14.1.7.{#SNMPINDEX}'
+              key: 'sc.disk.id[{#SNMPVALUE}]'
+              delay: 1h
+              history: 7d
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: bb154ebcf39b4f4ab6b3711be0146c30
+              name: 'Disk {#DISKPOSITION} Model'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.16139.2.45.1.6.{#SNMPINDEX}'
+              key: 'sc.disk.model[{#SNMPINDEX}]'
+              delay: 1h
+              history: 90d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: 79b815f8f3e24d5c970e1c9a62f18929
+              name: 'Disk {#DISKPOSITION} Type'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.10.{#SNMPINDEX}'
+              key: 'sc.disk.porttype[{#SNMPVALUE}]'
+              delay: 1h
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Disk Type'
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: 3b249402af25422497a3014bd7dcc108
+              name: 'Disk {#DISKPOSITION} Size'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.16139.2.14.1.9.{#SNMPINDEX}'
+              key: 'sc.disk.size[{#SNMPINDEX}]'
+              delay: 1h
+              history: 30d
+              trends: 180d
+              units: B
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1073741824'
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: 87680e60e48848b98d0b5c9c9dc91bd1
+              name: 'Disk {#DISKPOSITION} Status Message'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.6.{#SNMPINDEX}'
+              key: 'sc.disk.statusmsg[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Disk(s)
+            - uuid: 6642938252ab4f91b78b5d18668b2588
+              name: 'Disk {#DISKPOSITION} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.14.1.3.{#SNMPINDEX}'
+              key: 'sc.disk.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Disk(s)
+        - uuid: 19ab4669ae0a44d4a92599ab797bf3ec
+          name: 'Enclosure Fan Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ENCFANSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.20.1.3,{#ENCFANNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.20.1.4,{#ENCFANCURSPEED},1.3.6.1.4.1.674.11000.2000.500.1.2.20.1.5]'
+          key: sc.enclosurefan.discovery
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: c23f07fdb65b483b8800453cc67e1edf
+              name: 'Enclosure Fan {#ENCFANNAME} speed'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.20.1.5.{#SNMPINDEX}'
+              key: 'sc.enclosurefan.speed[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: '0'
+              value_type: CHAR
+              tags:
+                - tag: Application
+                  value: Fan(s)
+            - uuid: 9511b0afdcac43e3a2bde9d30176dae6
+              name: 'Enclosure Fan {#ENCFANNAME} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.20.1.3.{#SNMPINDEX}'
+              key: 'sc.enclosurefan.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Fan(s)
+              trigger_prototypes:
+                - uuid: 06ce527ba36a47e3a32075556f72270e
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosurefan.status[{#SNMPINDEX}])=3'
+                  name: 'Fan {#ENCFANNAME} is Degraded'
+                  priority: WARNING
+                - uuid: 4bdc5f8629a0463e84dff6f268f88281
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosurefan.status[{#SNMPINDEX}])=2'
+                  name: 'Fan {#ENCFANNAME} is Failed'
+                  priority: HIGH
+        - uuid: 6c21456dd33347e082206a4e58ff3c06
+          name: 'Enclosure Power Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ENCPOWERSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.21.1.3,{#ENCPOWERNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.21.1.4]'
+          key: sc.enclosurepower.discovery
+          delay: 1h
+          lifetime: 1d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: c3a957ab1e954910af1d542719fd5d02
+              name: 'Enclosure Power {#ENCPOWERNAME} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.21.1.3.{#SNMPINDEX}'
+              key: 'sc.enclosurepower.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Power(s)
+              trigger_prototypes:
+                - uuid: 06850c509aa54ad78d60eece43ca19dc
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosurepower.status[{#SNMPINDEX}])=3'
+                  name: '{#ENCPOWERNAME} is Degraded'
+                  priority: WARNING
+                - uuid: 0e441900b6c24e0e860242209fd31caa
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosurepower.status[{#SNMPINDEX}])=2'
+                  name: '{#ENCPOWERNAME} is Failed'
+                  priority: AVERAGE
+        - uuid: 1a00b07ad0ba49b0b7d9f9e9606300ab
+          name: 'Enclosure Temperature Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ENCEMPSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.23.1.3,{#ENCTEMPNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.23.1.4,{#CTRLTEMPCURRENT},1.3.6.1.4.1.674.11000.2000.500.1.2.23.1.5]'
+          key: sc.enclosuretemp.discovery
+          delay: 1h
+          lifetime: 1d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 0f541638ef1741c38f0b02afd6586d00
+              name: 'Enclosure Temperature {#ENCTEMPNAME} current'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.23.1.4.{#SNMPINDEX}'
+              key: 'sc.enclosuretemp.currenttemp[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              units: C
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+            - uuid: 10d575f0b38a4a088c12b721d279f969
+              name: 'Enclosure Temperature {#ENCTEMPNAME} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.23.1.4.{#SNMPINDEX}'
+              key: 'sc.enclosuretemp.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              trends: 180d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Temperature(s)
+              trigger_prototypes:
+                - uuid: 8842e0b199534b8fac2ac649075c98bd
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosuretemp.status[{#SNMPINDEX}])=2'
+                  name: '{#ENCTEMPNAME} temperature is critical'
+                  priority: AVERAGE
+                - uuid: 8caa29cc3b81493eaba418a17a7513e2
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.enclosuretemp.status[{#SNMPINDEX}])=3'
+                  name: '{#ENCTEMPNAME} temperature is warning'
+                  priority: WARNING
+          graph_prototypes:
+            - uuid: d06c055fa3374f0d8d828b5e877a7ddd
+              name: 'Temp of Sensor "{#SNMPVALUE}" in Enclosure {#SNMPINDEX}'
+              graph_items:
+                - color: DD0000
+                  item:
+                    host: 'SANITIZED - Dell Storage Center by SNMP'
+                    key: 'sc.enclosuretemp.currenttemp[{#SNMPINDEX}]'
+        - uuid: 06455e964110472c930967edcd34480f
+          name: 'Folder Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#FOLDERSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.25.1.3,{#FOLDERNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.25.1.4,{#FOLDERFREESPACE},1.3.6.1.4.1.674.11000.2000.500.1.2.25.1.9]'
+          key: sc.folder.discovery
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: e56f9f2e99874edb935af0d2f19d9130
+              name: 'Folder {#FOLDERNAME} free space'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.25.1.9.{#SNMPINDEX}'
+              key: 'sc.folder.freespace[{#SNMPINDEX}]'
+              delay: 5m
+              history: 90d
+            - uuid: 8e6a338285c0496bbd0077bfd8126262
+              name: 'Folder {#FOLDERNAME} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.25.1.3.{#SNMPINDEX}'
+              key: 'sc.folder.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 90d
+              valuemap:
+                name: 'Item Status'
+              trigger_prototypes:
+                - uuid: 941d2ea21e774c23936a123666928a69
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.folder.status[{#SNMPINDEX}])=2'
+                  name: 'Folder {#FOLDERSTATUS} is failed'
+                  priority: WARNING
+                - uuid: bb429406cbc34267b138f45b50522f3b
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.folder.status[{#SNMPINDEX}])=3'
+                  name: 'Folder {#FOLDERSTATUS} is unhealthy'
+                  priority: WARNING
+        - uuid: 13c86628b92b4403ba4e2881ae30717b
+          name: 'Server Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#SERVERSTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.3,{#SERVERNAME},1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.4,{#SERVERCONNECTIVITY},1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.5,{#SERVERPATHCOUNT},1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.6]'
+          key: sc.server.discovery
+          delay: 5m
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 4b3bbd9481374c66aaa4f84c56d7aa6d
+              name: 'Server {#SERVERNAME} connectivity'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.5.{#SNMPINDEX}'
+              key: 'sc.server.connectivity[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              tags:
+                - tag: Application
+                  value: Server(s)
+              trigger_prototypes:
+                - uuid: 77f6bb24126d4ca09522d08cc7f8d667
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.server.connectivity[{#SNMPINDEX}])=2'
+                  name: 'Connectivity of server {#SERVERNAME} is down on {HOST.NAME}'
+                  priority: AVERAGE
+                - uuid: 2aada8bdaa2c49dc879987a08135f98c
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.server.connectivity[{#SNMPINDEX}])=3'
+                  name: 'Connectivity of server {#SERVERNAME} is partial on {HOST.NAME}'
+                  priority: WARNING
+            - uuid: 674921c5e9cb4c6eb9e6e1caae456f28
+              name: 'Server {#SERVERNAME} path count'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.6.{#SNMPINDEX}'
+              key: 'sc.server.pathcount[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              tags:
+                - tag: Application
+                  value: Server(s)
+              trigger_prototypes:
+                - uuid: 1bf6b70a8b0a4a5fbbbd3e5fde047b81
+                  expression: 'change(/SANITIZED - Dell Storage Center by SNMP/sc.server.pathcount[{#SNMPINDEX}])<1'
+                  name: 'Server {#SERVERNAME} path count has changed on {HOST.NAME}'
+                  priority: WARNING
+                  manual_close: 'YES'
+            - uuid: 95f48dfc8b7042f78722540c9233c78e
+              name: 'Server {#SERVERNAME} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.27.1.3.{#SNMPINDEX}'
+              key: 'sc.server.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              valuemap:
+                name: 'Server Connectivity'
+              tags:
+                - tag: Application
+                  value: Server(s)
+              trigger_prototypes:
+                - uuid: b153a1e8c83f4b5f9580ac963adac973
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.server.status[{#SNMPINDEX}])=3'
+                  name: 'Server {#SERVERNAME} is degraded on {HOST.NAME}'
+                  priority: AVERAGE
+                - uuid: 9e2df6653a5b496db06861a08213c58b
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.server.status[{#SNMPINDEX}])=2'
+                  name: 'Server {#SERVERNAME} is failed on {HOST.NAME}'
+                  priority: AVERAGE
+        - uuid: 27c9750493804e3f9ddf771753ce738e
+          name: 'Volume Discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#VOLUMESTATUS},1.3.6.1.4.1.674.11000.2000.500.1.2.26.1.3,{#VOLUMENAME},1.3.6.1.4.1.674.11000.2000.500.1.2.26.1.4]'
+          key: sc.volume.discovery
+          delay: 1h
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: 0e78e25fb4b546f4b7e42cf521f6d2b7
+              name: 'Volume {#VOLUMENAME} Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.674.11000.2000.500.1.2.26.1.3.{#SNMPINDEX}'
+              key: 'sc.volume.status[{#SNMPINDEX}]'
+              delay: 5m
+              history: 7d
+              valuemap:
+                name: 'Item Status'
+              tags:
+                - tag: Application
+                  value: Volume(s)
+              trigger_prototypes:
+                - uuid: 65acb7b3388c42d49222b18b383e7066
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.volume.status[{#SNMPINDEX}])=3'
+                  name: '{#VOLUMENAME} is degraded on {HOST.NAME}'
+                  priority: WARNING
+                - uuid: 980e70d0b22945b3871f20989d169d80
+                  expression: 'last(/SANITIZED - Dell Storage Center by SNMP/sc.volume.status[{#SNMPINDEX}])=2'
+                  name: '{#VOLUMENAME} is failed on {HOST.NAME}'
+                  priority: AVERAGE
+      valuemaps:
+        - uuid: f8b8c0e54efa48b2b58a9c5a135bb8ea
+          name: 'Cache Battery Status'
+          mappings:
+            - value: '0'
+              newvalue: 'No Battery'
+            - value: '1'
+              newvalue: Normal
+            - value: '2'
+              newvalue: 'Pending Expiration'
+            - value: '3'
+              newvalue: Expired
+        - uuid: 9514499ede214e6d85c7eeb75acb7518
+          name: 'Disk Health'
+          mappings:
+            - value: '1'
+              newvalue: Healthy
+            - value: '2'
+              newvalue: 'Not Healthy'
+            - value: '3'
+              newvalue: Unknown
+        - uuid: 6a084862ca5c401d8aa4540b0557ad0a
+          name: 'Disk Type'
+          mappings:
+            - value: '1'
+              newvalue: FibreChannel
+            - value: '2'
+              newvalue: iSCSI
+            - value: '3'
+              newvalue: FibreChannelOverEthernet
+            - value: '4'
+              newvalue: SAS
+            - value: '5'
+              newvalue: Unknown
+        - uuid: 07363951baaa4a8badfab7601b1ba78f
+          name: 'Host status'
+          mappings:
+            - value: '0'
+              newvalue: 'Up (maybe)'
+            - value: '1'
+              newvalue: 'Down (maybe)'
+            - value: '2'
+              newvalue: 'Unreachable (maybe)'
+        - uuid: ff97ed5298c3461eb42ac63e246eda1f
+          name: 'Item Status'
+          mappings:
+            - value: '1'
+              newvalue: Normal
+            - value: '2'
+              newvalue: Failed
+            - value: '3'
+              newvalue: Degraded
+        - uuid: 2cfd289b3ae04497b53026591fc0fdb1
+          name: 'Server Connectivity'
+          mappings:
+            - value: '1'
+              newvalue: Up
+            - value: '2'
+              newvalue: Down
+            - value: '3'
+              newvalue: Partial
