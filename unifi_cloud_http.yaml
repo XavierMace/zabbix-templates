@@ -1,0 +1,287 @@
+zabbix_export:
+  version: '8.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  host_groups:
+    - uuid: 4c0f56220ce54f649a2a4df37d4ca0c1
+      name: 'UniFi Network Sites'
+  templates:
+    - uuid: 5e8535553d8a43a396fd150297968522
+      template: 'Unifi Devices by HTTP'
+      name: 'Unifi Devices by HTTP'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 98cc9ddc04644bcfb1489a7ff9977489
+          name: 'Get Devices'
+          type: HTTP_AGENT
+          key: unifi.discover.devices
+          delay: 5m
+          history: 1h
+          value_type: TEXT
+          url: 'https://{$UNIFI_BASE_URL}/v1/devices?hostIds[]={$UNIFI_SITE_ID}'
+          http_proxy: '{$UNIFI_HTTP_PROXY}'
+          headers:
+            - name: X-API-KEY
+              value: '{$UNIFI_API_KEY}'
+      discovery_rules:
+        - uuid: b3653428971c4e889bee3c189898adcc
+          name: 'Site {$UNIFI_SITE_NAME}'
+          type: DEPENDENT
+          key: unifi.site.discovery
+          item_prototypes:
+            - uuid: 07cd4b2d6f4f47848003c62c325b206a
+              name: '{#UNIFI_DEVICE_NAME} Firmware Status'
+              type: DEPENDENT
+              key: 'unifi.device.firmwarestatus[{#UNIFI_DEVICE_ID}]'
+              trends: '0'
+              valuemap:
+                name: 'Firmware Status'
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.id== "{#UNIFI_DEVICE_ID}")].firmwareStatus'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      switch (value) {
+                          case 'upToDate':
+                              return 0
+                          case 'updateAvailable':
+                              return 1
+                          default:
+                              return 10
+                      }
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1w
+              master_item:
+                key: unifi.discover.devices
+              trigger_prototypes:
+                - uuid: 50dad7b3f2cd4efdac3b4ff967698e2e
+                  expression: 'last(/Unifi Devices by HTTP/unifi.device.firmwarestatus[{#UNIFI_DEVICE_ID}]) = 1'
+                  name: '{#UNIFI_DEVICE_NAME} has a firmware update'
+                  priority: INFO
+            - uuid: 2ead8dc06c3044c89860837931454828
+              name: '{#UNIFI_DEVICE_NAME} IP'
+              type: DEPENDENT
+              key: 'unifi.device.ip[{#UNIFI_DEVICE_ID}]'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.id== "{#UNIFI_DEVICE_ID}")].ip'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1w
+              master_item:
+                key: unifi.discover.devices
+            - uuid: 35dd04a1f5534cdca57638d7c35f8166
+              name: '{#UNIFI_DEVICE_NAME} Model'
+              type: DEPENDENT
+              key: 'unifi.device.model[{#UNIFI_DEVICE_ID}]'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.id== "{#UNIFI_DEVICE_ID}")].model'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1w
+              master_item:
+                key: unifi.discover.devices
+            - uuid: e8ff441b81a946749c6855b2cad98e97
+              name: '{#UNIFI_DEVICE_NAME} Status'
+              type: DEPENDENT
+              key: 'unifi.device.status[{#UNIFI_DEVICE_ID}]'
+              trends: '0'
+              valuemap:
+                name: Status
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.id== "{#UNIFI_DEVICE_ID}")].status'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      switch (value) {
+                          case 'online':
+                              return 0
+                          case 'offline':
+                              return 1
+                          default:
+                              return 10
+                      }
+              master_item:
+                key: unifi.discover.devices
+              trigger_prototypes:
+                - uuid: 12d15f5a50ff49bfa52259dc6a74108b
+                  expression: 'last(/Unifi Devices by HTTP/unifi.device.status[{#UNIFI_DEVICE_ID}]) = 1'
+                  name: '{#UNIFI_DEVICE_NAME} is offline'
+                  priority: WARNING
+                  manual_close: 'YES'
+            - uuid: 1feaa51527354031898e134bdbda05b4
+              name: '{#UNIFI_DEVICE_NAME} Version'
+              type: DEPENDENT
+              key: 'unifi.device.version[{#UNIFI_DEVICE_ID}]'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.id== "{#UNIFI_DEVICE_ID}")].version'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1w
+              master_item:
+                key: unifi.discover.devices
+          master_item:
+            key: unifi.discover.devices
+          lld_macro_paths:
+            - lld_macro: '{#UNIFI_DEVICE_ID}'
+              path: $.id
+            - lld_macro: '{#UNIFI_DEVICE_NAME}'
+              path: $.name
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - '$.data[0].devices[*]'
+      macros:
+        - macro: '{$UNIFI_BASE_URL}'
+          value: api.ui.com
+          description: 'Unifi API Hostname'
+      valuemaps:
+        - uuid: 97a1da2bd46a470eb07bc64269f82e3b
+          name: 'Firmware Status'
+          mappings:
+            - value: '0'
+              newvalue: 'Up To Date'
+            - value: '1'
+              newvalue: 'Update Available'
+            - value: '10'
+              newvalue: Unknown
+        - uuid: f4126fa44e0c40f9a2d980b608f75df5
+          name: Status
+          mappings:
+            - value: '0'
+              newvalue: Online
+            - value: '1'
+              newvalue: Offline
+            - value: '10'
+              newvalue: Unknown
+    - uuid: 6187599c3b5a48abba75780d030a7e3e
+      template: 'Unifi Network by HTTP'
+      name: 'Unifi Network by HTTP'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 6fb6806224af41eda4770fc0a7585969
+          name: 'Get Sites'
+          type: HTTP_AGENT
+          key: unifi.get.sites
+          delay: 15m
+          history: 7d
+          value_type: JSON
+          url: 'https://{$UNIFI_URL}/v1/devices'
+          http_proxy: '{$UNIFI_HTTP_PROXY}'
+          headers:
+            - name: X-API-KEY
+              value: '{$UNIFI_API_KEY}'
+      discovery_rules:
+        - uuid: 036cb40da77b4b7c848e2fca140c956a
+          name: 'Unifi Site Discovery'
+          type: DEPENDENT
+          key: unifi.discovery.sites
+          item_prototypes:
+            - uuid: fd9e4a8b5a9e42758037daa0141dbb82
+              name: '{#UNIFI_SITE_NAME} Device Data'
+              type: DEPENDENT
+              key: 'unifi.site.devices[{#UNIFI_SITE_ID}]'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.hostId== "{#UNIFI_SITE_ID}")].devices'
+              master_item:
+                key: unifi.get.sites
+            - uuid: 126252d30aa44002b77c40ad49a334e2
+              name: '{#UNIFI_SITE_NAME} Site ID'
+              type: DEPENDENT
+              key: 'unifi.site.id[{#UNIFI_SITE_ID}]'
+              value_type: TEXT
+              preprocessing:
+                - type: JSONPATH
+                  parameters:
+                    - '$..[?(@.hostId== "{#UNIFI_SITE_ID}")].hostId'
+                - type: LTRIM
+                  parameters:
+                    - '["'
+                - type: RTRIM
+                  parameters:
+                    - '"]'
+              master_item:
+                key: unifi.get.sites
+          host_prototypes:
+            - uuid: 1b0bf3d8a5074a86a51c31c606cb0eb3
+              host: '{#UNIFI_SITE_NAME}'
+              name: '{#UNIFI_SITE_NAME}'
+              group_links:
+                - group:
+                    name: 'UniFi Network Sites'
+              group_prototypes:
+                - name: '{#UNIFI_SITE_NAME}'
+              templates:
+                - name: 'Unifi Devices by HTTP'
+              macros:
+                - macro: '{$UNIFI_SITE_ID}'
+                  value: '{#UNIFI_SITE_ID}'
+                  description: 'Unifi Console ID'
+                - macro: '{$UNIFI_SITE_NAME}'
+                  value: '{#UNIFI_SITE_NAME}'
+                  description: 'Unifi Console Name'
+          master_item:
+            key: unifi.get.sites
+          lld_macro_paths:
+            - lld_macro: '{#UNIFI_SITE_ID}'
+              path: $.hostId
+            - lld_macro: '{#UNIFI_SITE_NAME}'
+              path: $.hostName
+      macros:
+        - macro: '{$UNIFI_API_KEY}'
+          type: SECRET_TEXT
+          description: 'Generated from Unifi Site Manager'
+        - macro: '{$UNIFI_HTTP_PROXY}'
+          description: 'HTTP Proxy to use if any'
+        - macro: '{$UNIFI_URL}'
+          value: api.ui.com
+          description: 'Base URL such as api.ui.com'
